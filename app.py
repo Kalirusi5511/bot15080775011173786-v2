@@ -9,7 +9,10 @@ load_dotenv()
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 
-# Render Webserver
+# =========================
+# RENDER WEB SERVER
+# =========================
+
 app = Flask(__name__)
 
 @app.route("/")
@@ -23,12 +26,147 @@ def run_web():
 threading.Thread(target=run_web, daemon=True).start()
 
 
-# Discord Bot
-intents = discord.Intents.default()
-bot = commands.Bot(command_prefix="!", intents=intents)
+# =========================
+# DISCORD BOT
+# =========================
 
+intents = discord.Intents.default()
+bot = commands.Bot(
+    command_prefix="!",
+    intents=intents
+)
+
+
+# =========================
+# BEWERBUNGS-FORMULAR
+# =========================
+
+class BewerbungModal(discord.ui.Modal):
+
+    def __init__(self, rolle):
+        super().__init__(title=f"{rolle} Bewerbung")
+        self.rolle = rolle
+
+        self.alter = discord.ui.TextInput(
+            label="Wie alt bist du?",
+            placeholder="z.B. 16",
+            required=True,
+            max_length=3
+        )
+
+        self.erfahrung = discord.ui.TextInput(
+            label="Deine Erfahrung",
+            placeholder="Erzähle uns von deiner Erfahrung...",
+            style=discord.TextStyle.paragraph,
+            required=True,
+            max_length=1000
+        )
+
+        self.motivation = discord.ui.TextInput(
+            label="Warum möchtest du die Rolle?",
+            placeholder="Warum möchtest du Teil des Teams werden?",
+            style=discord.TextStyle.paragraph,
+            required=True,
+            max_length=1000
+        )
+
+        self.staerken = discord.ui.TextInput(
+            label="Deine Stärken",
+            placeholder="z.B. freundlich, geduldig, zuverlässig...",
+            style=discord.TextStyle.paragraph,
+            required=True,
+            max_length=500
+        )
+
+        self.zusatz = discord.ui.TextInput(
+            label="Zusätzliche Informationen",
+            placeholder="Optional weitere Informationen...",
+            style=discord.TextStyle.paragraph,
+            required=False,
+            max_length=500
+        )
+
+        self.add_item(self.alter)
+        self.add_item(self.erfahrung)
+        self.add_item(self.motivation)
+        self.add_item(self.staerken)
+        self.add_item(self.zusatz)
+
+    async def on_submit(self, interaction: discord.Interaction):
+
+        embed = discord.Embed(
+            title=f"📝 Neue {self.rolle} Bewerbung",
+            color=discord.Color.blurple()
+        )
+
+        embed.add_field(
+            name="👤 Bewerber",
+            value=f"{interaction.user.mention}\n`{interaction.user}`",
+            inline=False
+        )
+
+        embed.add_field(
+            name="🎯 Gewünschte Rolle",
+            value=self.rolle,
+            inline=True
+        )
+
+        embed.add_field(
+            name="🎂 Alter",
+            value=self.alter.value,
+            inline=True
+        )
+
+        embed.add_field(
+            name="💼 Erfahrung",
+            value=self.erfahrung.value,
+            inline=False
+        )
+
+        embed.add_field(
+            name="🎯 Motivation",
+            value=self.motivation.value,
+            inline=False
+        )
+
+        embed.add_field(
+            name="💪 Stärken",
+            value=self.staerken.value,
+            inline=False
+        )
+
+        if self.zusatz.value:
+            embed.add_field(
+                name="📌 Zusatz",
+                value=self.zusatz.value,
+                inline=False
+            )
+
+        embed.set_footer(
+            text=f"User ID: {interaction.user.id}"
+        )
+
+        # Bewerbungskanal aus Environment Variable
+        channel_id = os.getenv("BEWERBUNGS_CHANNEL_ID")
+
+        if channel_id:
+            channel = interaction.guild.get_channel(int(channel_id))
+
+            if channel:
+                await channel.send(embed=embed)
+
+        await interaction.response.send_message(
+            "✅ Deine Bewerbung wurde erfolgreich abgeschickt!",
+            ephemeral=True
+        )
+
+
+# =========================
+# BUTTONS
+# =========================
 
 class BewerbungView(discord.ui.View):
+
     def __init__(self):
         super().__init__(timeout=None)
 
@@ -37,10 +175,13 @@ class BewerbungView(discord.ui.View):
         style=discord.ButtonStyle.secondary,
         custom_id="bewerbung_supporter"
     )
-    async def supporter(self, interaction, button):
-        await interaction.response.send_message(
-            "🛡️ **Supporter Bewerbung**\nBitte beschreibe deine Erfahrung.",
-            ephemeral=True
+    async def supporter(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button
+    ):
+        await interaction.response.send_modal(
+            BewerbungModal("Supporter")
         )
 
     @discord.ui.button(
@@ -48,10 +189,13 @@ class BewerbungView(discord.ui.View):
         style=discord.ButtonStyle.primary,
         custom_id="bewerbung_moderator"
     )
-    async def moderator(self, interaction, button):
-        await interaction.response.send_message(
-            "🛡️ **Moderator Bewerbung**\nBitte beschreibe deine Erfahrung.",
-            ephemeral=True
+    async def moderator(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button
+    ):
+        await interaction.response.send_modal(
+            BewerbungModal("Moderator")
         )
 
     @discord.ui.button(
@@ -59,10 +203,13 @@ class BewerbungView(discord.ui.View):
         style=discord.ButtonStyle.success,
         custom_id="bewerbung_entwickler"
     )
-    async def entwickler(self, interaction, button):
-        await interaction.response.send_message(
-            "👨‍💻 **Entwickler Bewerbung**\nBitte beschreibe deine Programmiererfahrung.",
-            ephemeral=True
+    async def entwickler(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button
+    ):
+        await interaction.response.send_modal(
+            BewerbungModal("Entwickler")
         )
 
     @discord.ui.button(
@@ -70,12 +217,19 @@ class BewerbungView(discord.ui.View):
         style=discord.ButtonStyle.danger,
         custom_id="bewerbung_admin"
     )
-    async def admin(self, interaction, button):
-        await interaction.response.send_message(
-            "👑 **Admin Bewerbung**\nBitte beschreibe deine Erfahrung.",
-            ephemeral=True
+    async def admin(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button
+    ):
+        await interaction.response.send_modal(
+            BewerbungModal("Admin")
         )
 
+
+# =========================
+# /BEWERBUNG
+# =========================
 
 @bot.tree.command(
     name="bewerbung",
@@ -86,12 +240,12 @@ async def bewerbung(interaction: discord.Interaction):
     embed = discord.Embed(
         title="🎓 Bewerbungs System",
         description=(
-            "Willkommen zum Bewerbungs-System.\n"
-            "🛡️ Supporter\n"
-            "🛡️ Moderator\n"
-            "👨‍💻 Entwickler\n"
-            "👑 Admin\n\n"
-            "Klicke auf einen Button."
+            "Willkommen zum Bewerbungs-System.\n\n"
+            "🛡️ **Supporter**\n"
+            "🛡️ **Moderator**\n"
+            "👨‍💻 **Entwickler**\n"
+            "👑 **Admin**\n\n"
+            "Klicke auf einen Button, um dich zu bewerben."
         ),
         color=discord.Color.blurple()
     )
@@ -104,13 +258,18 @@ async def bewerbung(interaction: discord.Interaction):
     )
 
     await interaction.response.send_message(
-        "✅ Panel erstellt!",
+        "✅ Bewerbungs-Panel erstellt!",
         ephemeral=True
     )
 
 
+# =========================
+# START
+# =========================
+
 @bot.event
 async def on_ready():
+
     bot.add_view(BewerbungView())
 
     try:
@@ -119,7 +278,7 @@ async def on_ready():
     except Exception as e:
         print(f"❌ Sync Fehler: {e}")
 
-    print(f"🤖 Online: {bot.user}")
+    print(f"🤖 Online als {bot.user}")
 
 
 if not TOKEN:
