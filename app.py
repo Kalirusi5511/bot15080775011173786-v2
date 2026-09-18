@@ -1,39 +1,26 @@
-```python
 import os
 import threading
 import requests
 
-from flask import Flask
 import discord
 from discord.ext import commands
+from flask import Flask
 from dotenv import load_dotenv
-
-# =========================================================
-# ENV
-# =========================================================
 
 load_dotenv()
 
+# =========================================================
+# KONFIGURATION
+# =========================================================
+
 TOKEN = os.getenv("DISCORD_TOKEN")
 OWNER_ID = int(os.getenv("OWNER_ID", "0"))
-BEWERBUNGS_CHANNEL_ID = int(os.getenv("BEWERBUNGS_CHANNEL_ID", "0"))
+BEWERBUNGS_CHANNEL_ID = int(
+    os.getenv("BEWERBUNGS_CHANNEL_ID", "0")
+)
 
 RENDER_API_KEY = os.getenv("RENDER_API_KEY")
 RENDER_SERVICE_ID = os.getenv("RENDER_SERVICE_ID")
-
-
-# =========================================================
-# CHECK CONFIG
-# =========================================================
-
-if not TOKEN:
-    raise RuntimeError("❌ DISCORD_TOKEN fehlt!")
-
-if not BEWERBUNGS_CHANNEL_ID:
-    raise RuntimeError("❌ BEWERBUNGS_CHANNEL_ID fehlt!")
-
-if not OWNER_ID:
-    raise RuntimeError("❌ OWNER_ID fehlt!")
 
 
 # =========================================================
@@ -69,8 +56,11 @@ threading.Thread(
 
 
 # =========================================================
-# DISCORD
+# DISCORD BOT
 # =========================================================
+
+if not TOKEN:
+    raise RuntimeError("DISCORD_TOKEN fehlt!")
 
 intents = discord.Intents.default()
 
@@ -81,12 +71,12 @@ bot = commands.Bot(
 
 
 # =========================================================
-# BEWERBUNGS MODAL
+# BEWERBUNGS-FORMULAR
 # =========================================================
 
 class BewerbungModal(discord.ui.Modal):
 
-    def __init__(self, bereich: str):
+    def __init__(self, bereich):
         super().__init__(
             title=f"Bewerbung: {bereich}"
         )
@@ -110,7 +100,7 @@ class BewerbungModal(discord.ui.Modal):
 
         self.motivation = discord.ui.TextInput(
             label="Warum möchtest du dich bewerben?",
-            placeholder="Erkläre deine Motivation...",
+            placeholder="Deine Motivation...",
             style=discord.TextStyle.paragraph,
             required=True,
             max_length=1500
@@ -118,7 +108,7 @@ class BewerbungModal(discord.ui.Modal):
 
         self.staerken = discord.ui.TextInput(
             label="Deine Stärken",
-            placeholder="z.B. Teamwork, Aktivität, Kommunikation...",
+            placeholder="z.B. Teamwork, Kommunikation...",
             style=discord.TextStyle.paragraph,
             required=True,
             max_length=1000
@@ -138,7 +128,7 @@ class BewerbungModal(discord.ui.Modal):
         self.add_item(self.staerken)
         self.add_item(self.zusatz)
 
-    async def on_submit(self, interaction: discord.Interaction):
+    async def on_submit(self, interaction):
 
         channel = interaction.client.get_channel(
             BEWERBUNGS_CHANNEL_ID
@@ -146,7 +136,7 @@ class BewerbungModal(discord.ui.Modal):
 
         if channel is None:
             await interaction.response.send_message(
-                "❌ Der Bewerbungs-Channel wurde nicht gefunden.",
+                "❌ Bewerbungs-Channel wurde nicht gefunden.",
                 ephemeral=True
             )
             return
@@ -154,8 +144,8 @@ class BewerbungModal(discord.ui.Modal):
         embed = discord.Embed(
             title="📨 Neue Bewerbung",
             description=(
-                f"**Bereich:** {self.bereich}\n"
-                f"**Bewerber:** {interaction.user.mention}"
+                f"**Bewerber:** {interaction.user.mention}\n"
+                f"**Bereich:** {self.bereich}"
             ),
             color=discord.Color.blurple()
         )
@@ -195,18 +185,32 @@ class BewerbungModal(discord.ui.Modal):
             text=f"User ID: {interaction.user.id}"
         )
 
-        await channel.send(
-            embed=embed
-        )
+        try:
+            await channel.send(embed=embed)
 
-        await interaction.response.send_message(
-            "✅ Deine Bewerbung wurde erfolgreich abgeschickt!",
-            ephemeral=True
-        )
+            await interaction.response.send_message(
+                "✅ Deine Bewerbung wurde erfolgreich abgeschickt!",
+                ephemeral=True
+            )
+
+        except discord.Forbidden:
+            await interaction.response.send_message(
+                "❌ Der Bot hat keine Berechtigung, "
+                "in den Bewerbungs-Channel zu schreiben.",
+                ephemeral=True
+            )
+
+        except Exception as error:
+            print(f"Bewerbungsfehler: {error}")
+
+            await interaction.response.send_message(
+                "❌ Beim Absenden ist ein Fehler aufgetreten.",
+                ephemeral=True
+            )
 
 
 # =========================================================
-# BEWERBUNGS BUTTONS
+# BEWERBUNGS-BUTTONS
 # =========================================================
 
 class BewerbungView(discord.ui.View):
@@ -276,7 +280,7 @@ class BewerbungView(discord.ui.View):
 
 
 # =========================================================
-# /bewerbung
+# /BEWERBUNG
 # =========================================================
 
 @bot.tree.command(
@@ -317,7 +321,7 @@ async def bewerbung(interaction: discord.Interaction):
 
 
 # =========================================================
-# /ping
+# /PING
 # =========================================================
 
 @bot.tree.command(
@@ -329,13 +333,12 @@ async def ping(interaction: discord.Interaction):
     latency = round(bot.latency * 1000)
 
     await interaction.response.send_message(
-        f"🏓 **Pong!**\n"
-        f"📡 Latenz: `{latency}ms`"
+        f"🏓 **Pong!**\n📡 Latenz: `{latency}ms`"
     )
 
 
 # =========================================================
-# /restart
+# /RESTART
 # =========================================================
 
 @bot.tree.command(
@@ -344,7 +347,6 @@ async def ping(interaction: discord.Interaction):
 )
 async def restart(interaction: discord.Interaction):
 
-    # Nur OWNER_ID
     if interaction.user.id != OWNER_ID:
         await interaction.response.send_message(
             "❌ Du darfst diesen Befehl nicht benutzen.",
@@ -383,16 +385,14 @@ async def restart(interaction: discord.Interaction):
         )
 
         if response.status_code == 200:
-
-            print("✅ Render-Service wird neu gestartet.")
+            print("✅ Render-Restart gestartet.")
 
         else:
-
             print(
-                f"❌ Render Fehler "
-                f"{response.status_code}: "
-                f"{response.text}"
+                f"❌ Render API Fehler: "
+                f"{response.status_code}"
             )
+            print(response.text)
 
     except requests.RequestException as error:
 
@@ -408,16 +408,18 @@ async def restart(interaction: discord.Interaction):
 @bot.event
 async def on_ready():
 
-    print("====================================")
+    print("======================================")
     print(f"🤖 Bot: {bot.user}")
     print(f"🆔 ID: {bot.user.id}")
-    print("====================================")
-
-    # Persistent Buttons registrieren
-    bot.add_view(BewerbungView())
+    print("🚀 Bot ist online!")
+    print("======================================")
 
     try:
+        bot.add_view(BewerbungView())
+    except Exception as error:
+        print(f"View Fehler: {error}")
 
+    try:
         synced = await bot.tree.sync()
 
         print(
@@ -435,7 +437,6 @@ async def on_ready():
 # START
 # =========================================================
 
-print("🚀 Bot startet...")
+print("🚀 Discord Bot startet...")
 
 bot.run(TOKEN)
-```
