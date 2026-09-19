@@ -227,32 +227,36 @@ FORMULAR_VORLAGEN = {
 
 class BewerbungModal(discord.ui.Modal):
 
-    def __init__(self, rolle: str):
+    def __init__(self, rolle: str, auto_fill: bool = False):
 
         self.rolle = rolle
+        self.auto_fill = auto_fill
 
         vorlage = FORMULAR_VORLAGEN.get(
             rolle,
             FORMULAR_VORLAGEN["Supporter"]
         )
 
+        # Titel je nach Modus anpassen
+        modus = "Auto" if auto_fill else "Manuell"
         super().__init__(
-            title=vorlage["beschreibung"]
+            title=f"{vorlage['beschreibung']} ({modus})"
         )
 
         # -------------------------------------------------
-        # NAME
+        # NAME (bei Auto-Fill vorausgefüllt)
         # -------------------------------------------------
 
         self.name = discord.ui.TextInput(
             label="Name",
             placeholder="Gib deinen Namen ein...",
             required=True,
-            max_length=100
+            max_length=100,
+            default=""  # Wird im on_submit oder über callback gesetzt
         )
 
         # -------------------------------------------------
-        # ALTER
+        # ALTER (immer leer)
         # -------------------------------------------------
 
         self.alter = discord.ui.TextInput(
@@ -263,7 +267,7 @@ class BewerbungModal(discord.ui.Modal):
         )
 
         # -------------------------------------------------
-        # ERFAHRUNG
+        # ERFAHRUNG (immer leer)
         # -------------------------------------------------
 
         self.erfahrung = discord.ui.TextInput(
@@ -275,7 +279,7 @@ class BewerbungModal(discord.ui.Modal):
         )
 
         # -------------------------------------------------
-        # MOTIVATION
+        # MOTIVATION (immer leer)
         # -------------------------------------------------
 
         self.motivation = discord.ui.TextInput(
@@ -287,7 +291,7 @@ class BewerbungModal(discord.ui.Modal):
         )
 
         # -------------------------------------------------
-        # ZUSATZFRAGE
+        # ZUSATZFRAGE (immer leer)
         # -------------------------------------------------
 
         self.zusatz = discord.ui.TextInput(
@@ -437,7 +441,66 @@ class BewerbungModal(discord.ui.Modal):
 
 
 # =========================================================
-# BEWERBUNG SELECT
+# AUSWAHL: AUTO ODER MANUELL
+# =========================================================
+
+class ModusAuswahl(discord.ui.Select):
+
+    def __init__(self, rolle: str):
+
+        self.rolle = rolle
+
+        options = [
+            discord.SelectOption(
+                label="🚀 Automatisch ausfüllen",
+                value="auto",
+                description="Name wird vorausgefüllt"
+            ),
+            discord.SelectOption(
+                label="✏️ Manuell ausfüllen",
+                value="manuell",
+                description="Alle Felder selbst ausfüllen"
+            )
+        ]
+
+        super().__init__(
+            placeholder="📝 Wie möchtest du das Formular ausfüllen?",
+            min_values=1,
+            max_values=1,
+            options=options
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+
+        modus = self.values[0]
+        auto_fill = (modus == "auto")
+
+        # Modal erstellen
+        modal = BewerbungModal(
+            rolle=self.rolle,
+            auto_fill=auto_fill
+        )
+
+        # Bei Auto-Fill den Namen des Users setzen
+        if auto_fill:
+            modal.name.default = str(interaction.user)
+
+        await interaction.response.send_modal(modal)
+
+
+# =========================================================
+# VIEW FÜR MODUS-AUSWAHL
+# =========================================================
+
+class ModusView(discord.ui.View):
+
+    def __init__(self, rolle: str):
+        super().__init__(timeout=60)
+        self.add_item(ModusAuswahl(rolle))
+
+
+# =========================================================
+# BEWERBUNG SELECT (Rollen-Auswahl)
 # =========================================================
 
 class AutomatischesFormular(discord.ui.Select):
@@ -489,8 +552,12 @@ class AutomatischesFormular(discord.ui.Select):
 
         rolle = self.values[0]
 
-        await interaction.response.send_modal(
-            BewerbungModal(rolle)
+        # Statt direkt das Modal zu öffnen,
+        # zeigen wir die Modus-Auswahl (Auto/Manuell)
+        await interaction.response.send_message(
+            "Möchtest du das Formular automatisch oder manuell ausfüllen?",
+            view=ModusView(rolle),
+            ephemeral=True
         )
 
 
