@@ -252,7 +252,7 @@ class BewerbungModal(discord.ui.Modal):
             placeholder="Gib deinen Namen ein...",
             required=True,
             max_length=100,
-            default=""  # Wird im on_submit oder über callback gesetzt
+            default=""  # Wird im callback gesetzt
         )
 
         # -------------------------------------------------
@@ -267,7 +267,7 @@ class BewerbungModal(discord.ui.Modal):
         )
 
         # -------------------------------------------------
-        # ERFAHRUNG (immer leer)
+        # ERFAHRUNG (bei Auto-Fill mit Vorlage befüllt)
         # -------------------------------------------------
 
         self.erfahrung = discord.ui.TextInput(
@@ -275,11 +275,12 @@ class BewerbungModal(discord.ui.Modal):
             placeholder=vorlage["erfahrung"],
             style=discord.TextStyle.paragraph,
             required=True,
-            max_length=1000
+            max_length=1000,
+            default=vorlage["erfahrung"] if auto_fill else ""
         )
 
         # -------------------------------------------------
-        # MOTIVATION (immer leer)
+        # MOTIVATION (bei Auto-Fill mit Vorlage befüllt)
         # -------------------------------------------------
 
         self.motivation = discord.ui.TextInput(
@@ -287,11 +288,12 @@ class BewerbungModal(discord.ui.Modal):
             placeholder=vorlage["motivation"],
             style=discord.TextStyle.paragraph,
             required=True,
-            max_length=1500
+            max_length=1500,
+            default=vorlage["motivation"] if auto_fill else ""
         )
 
         # -------------------------------------------------
-        # ZUSATZFRAGE (immer leer)
+        # ZUSATZFRAGE (bei Auto-Fill mit Vorlage befüllt)
         # -------------------------------------------------
 
         self.zusatz = discord.ui.TextInput(
@@ -299,7 +301,8 @@ class BewerbungModal(discord.ui.Modal):
             placeholder=vorlage["zusatz"],
             style=discord.TextStyle.paragraph,
             required=True,
-            max_length=1500
+            max_length=1500,
+            default=vorlage["zusatz"] if auto_fill else ""
         )
 
         # -------------------------------------------------
@@ -454,7 +457,7 @@ class ModusAuswahl(discord.ui.Select):
             discord.SelectOption(
                 label="🚀 Automatisch ausfüllen",
                 value="auto",
-                description="Name wird vorausgefüllt"
+                description="Name und Formularbeschreibung werden vorausgefüllt"
             ),
             discord.SelectOption(
                 label="✏️ Manuell ausfüllen",
