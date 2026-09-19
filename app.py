@@ -1,3 +1,4 @@
+```python
 import os
 import time
 import asyncio
@@ -19,7 +20,9 @@ load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
 
 OWNER_ID = int(os.getenv("OWNER_ID", "0"))
-BEWERBUNGS_CHANNEL_ID = int(os.getenv("BEWERBUNGS_CHANNEL_ID", "0"))
+BEWERBUNGS_CHANNEL_ID = int(
+    os.getenv("BEWERBUNGS_CHANNEL_ID", "0")
+)
 
 RENDER_API_KEY = os.getenv("RENDER_API_KEY")
 RENDER_SERVICE_ID = os.getenv("RENDER_SERVICE_ID")
@@ -69,7 +72,7 @@ tree = discord.app_commands.CommandTree(bot)
 
 
 # =========================================================
-# LISTEN
+# DATA
 # =========================================================
 
 blocklist_users = set()
@@ -77,43 +80,10 @@ whitelist_users = set()
 
 
 # =========================================================
-# HILFSFUNKTIONEN
+# STATUS
 # =========================================================
 
-def is_owner(interaction: discord.Interaction):
-    return interaction.user.id == OWNER_ID
-
-
-def is_admin(interaction: discord.Interaction):
-
-    if interaction.user.id == OWNER_ID:
-        return True
-
-    if interaction.guild is None:
-        return False
-
-    member = interaction.guild.get_member(
-        interaction.user.id
-    )
-
-    if member is None:
-        return False
-
-    return member.guild_permissions.administrator
-
-
-async def require_admin(interaction: discord.Interaction):
-
-    if not is_admin(interaction):
-
-        await interaction.response.send_message(
-            "❌ Du darfst diesen Befehl nicht benutzen.",
-            ephemeral=True
-        )
-
-        return False
-
-    return True
+START_TIME = time.time()
 
 
 def format_uptime():
@@ -140,25 +110,60 @@ def format_uptime():
     result = []
 
     if days:
-        result.append(
-            f"{days}d"
-        )
+        result.append(f"{days}d")
 
     if hours:
-        result.append(
-            f"{hours}h"
-        )
+        result.append(f"{hours}h")
 
     if minutes:
-        result.append(
-            f"{minutes}m"
-        )
+        result.append(f"{minutes}m")
 
-    result.append(
-        f"{seconds}s"
-    )
+    result.append(f"{seconds}s")
 
     return " ".join(result)
+
+
+# =========================================================
+# PERMISSIONS
+# =========================================================
+
+def is_owner(interaction: discord.Interaction):
+
+    return interaction.user.id == OWNER_ID
+
+
+def is_admin(interaction: discord.Interaction):
+
+    if interaction.user.id == OWNER_ID:
+        return True
+
+    if interaction.guild is None:
+        return False
+
+    member = interaction.guild.get_member(
+        interaction.user.id
+    )
+
+    if member is None:
+        return False
+
+    return member.guild_permissions.administrator
+
+
+async def require_admin(
+    interaction: discord.Interaction
+):
+
+    if not is_admin(interaction):
+
+        await interaction.response.send_message(
+            "❌ Du darfst diesen Befehl nicht benutzen.",
+            ephemeral=True
+        )
+
+        return False
+
+    return True
 
 
 # =========================================================
@@ -260,21 +265,10 @@ class BewerbungModal(discord.ui.Modal):
             max_length=1000
         )
 
-        self.add_item(
-            self.alter
-        )
-
-        self.add_item(
-            self.erfahrung
-        )
-
-        self.add_item(
-            self.motivation
-        )
-
-        self.add_item(
-            self.staerken
-        )
+        self.add_item(self.alter)
+        self.add_item(self.erfahrung)
+        self.add_item(self.motivation)
+        self.add_item(self.staerken)
 
     async def on_submit(
         self,
@@ -403,7 +397,7 @@ class BewerbungModal(discord.ui.Modal):
 
 
 # =========================================================
-# ROLLEN-SELECT
+# ROLLEN SELECT
 # =========================================================
 
 class AutomatischesFormular(
@@ -437,7 +431,6 @@ class AutomatischesFormular(
                 description="Programmierung und Problemlösung",
                 emoji="💻"
             )
-
         ]
 
         super().__init__(
@@ -456,7 +449,6 @@ class AutomatischesFormular(
         vorlagen = {
 
             "Admin": {
-
                 "erfahrung":
                     "Ich habe Erfahrung mit Organisation, Verantwortung oder Teamleitung.",
 
@@ -468,7 +460,6 @@ class AutomatischesFormular(
             },
 
             "Moderator": {
-
                 "erfahrung":
                     "Ich habe Erfahrung mit Moderation, Regelwerken oder Discord-Servern.",
 
@@ -480,7 +471,6 @@ class AutomatischesFormular(
             },
 
             "Supporter": {
-
                 "erfahrung":
                     "Ich habe Erfahrung darin, anderen bei Fragen oder Problemen zu helfen.",
 
@@ -492,7 +482,6 @@ class AutomatischesFormular(
             },
 
             "Entwickler": {
-
                 "erfahrung":
                     "Ich habe Erfahrung mit Programmierung und Entwicklung.",
 
@@ -502,7 +491,6 @@ class AutomatischesFormular(
                 "staerken":
                     "Programmierung, logisches Denken, Problemlösung und Lernen."
             }
-
         }
 
         template = vorlagen[rolle]
@@ -510,21 +498,16 @@ class AutomatischesFormular(
         await interaction.response.send_modal(
 
             BewerbungModal(
-
                 rolle=rolle,
-
                 erfahrung_vorlage=template["erfahrung"],
-
                 motivation_vorlage=template["motivation"],
-
                 staerken_vorlage=template["staerken"]
-
             )
         )
 
 
 # =========================================================
-# BEWERBUNGS-VIEW
+# BEWERBUNGS VIEW
 # =========================================================
 
 class BewerbungView(
@@ -537,9 +520,6 @@ class BewerbungView(
             timeout=None
         )
 
-        # WICHTIG:
-        # Select wird direkt hinzugefügt.
-        # Kein @discord.ui.select(...) !
         self.add_item(
             AutomatischesFormular()
         )
@@ -559,15 +539,10 @@ class BewerbungView(
         await interaction.response.send_modal(
 
             BewerbungModal(
-
                 "Supporter",
-
                 "Ich habe Erfahrung darin, anderen bei Fragen oder Problemen zu helfen.",
-
                 "Ich helfe gerne anderen Usern und möchte das Team im Support unterstützen.",
-
                 "Hilfsbereitschaft, Geduld, Kommunikation und Zuverlässigkeit."
-
             )
         )
 
@@ -586,15 +561,10 @@ class BewerbungView(
         await interaction.response.send_modal(
 
             BewerbungModal(
-
                 "Moderator",
-
                 "Ich habe Erfahrung mit Moderation, Regelwerken oder Discord-Servern.",
-
                 "Ich möchte dabei helfen, dass der Server freundlich, fair und ordentlich bleibt.",
-
                 "Kommunikation, Geduld, Regelkenntnis und Konfliktlösung."
-
             )
         )
 
@@ -613,15 +583,10 @@ class BewerbungView(
         await interaction.response.send_modal(
 
             BewerbungModal(
-
                 "Entwickler",
-
                 "Ich habe Erfahrung mit Programmierung und Entwicklung.",
-
                 "Ich möchte bei technischen Projekten helfen und neue Funktionen entwickeln.",
-
                 "Programmierung, logisches Denken, Problemlösung und Lernen."
-
             )
         )
 
@@ -640,15 +605,10 @@ class BewerbungView(
         await interaction.response.send_modal(
 
             BewerbungModal(
-
                 "Admin",
-
                 "Ich habe Erfahrung mit Organisation, Verantwortung oder Teamleitung.",
-
                 "Ich möchte Verantwortung übernehmen und das Team unterstützen.",
-
                 "Organisation, Verantwortungsbewusstsein und Teamarbeit."
-
             )
         )
 
@@ -665,9 +625,7 @@ async def bewerbung(
     interaction: discord.Interaction
 ):
 
-    if not await require_admin(
-        interaction
-    ):
+    if not await require_admin(interaction):
         return
 
     embed = discord.Embed(
@@ -746,16 +704,13 @@ async def bot_status(
     interaction: discord.Interaction
 ):
 
-    if not await require_admin(
-        interaction
-    ):
+    if not await require_admin(interaction):
         return
 
     await interaction.response.defer(
         ephemeral=True
     )
 
-    # Discord
     discord_ping = bot.latency * 1000
 
     if bot.is_ready():
@@ -763,7 +718,6 @@ async def bot_status(
     else:
         discord_status = "🔴 Offline"
 
-    # Website
     website = await asyncio.to_thread(
         check_website
     )
@@ -791,7 +745,6 @@ async def bot_status(
             f"`{website['error']}`"
         )
 
-    # Netzwerk
     if discord_ping < 100:
         network = "🟢 Sehr gut"
 
@@ -873,9 +826,7 @@ async def bot_blocklist(
     interaction: discord.Interaction
 ):
 
-    if not await require_admin(
-        interaction
-    ):
+    if not await require_admin(interaction):
         return
 
     if not blocklist_users:
@@ -907,9 +858,7 @@ async def bot_whitelist(
     interaction: discord.Interaction
 ):
 
-    if not await require_admin(
-        interaction
-    ):
+    if not await require_admin(interaction):
         return
 
     if not whitelist_users:
@@ -941,9 +890,7 @@ async def bot_disconnect(
     interaction: discord.Interaction
 ):
 
-    if not is_owner(
-        interaction
-    ):
+    if not is_owner(interaction):
 
         await interaction.response.send_message(
             "❌ Nur der Owner darf diesen Befehl benutzen.",
@@ -981,9 +928,7 @@ async def restart(
     interaction: discord.Interaction
 ):
 
-    if not is_owner(
-        interaction
-    ):
+    if not is_owner(interaction):
 
         await interaction.response.send_message(
             "❌ Du darfst diesen Befehl nicht benutzen.",
@@ -1010,8 +955,6 @@ async def restart(
 
         return
 
-    # Nachricht zuerst senden.
-    # Danach wird Render neu gestartet.
     await interaction.response.send_message(
         "🔄 **Render-Neustart wird jetzt ausgelöst!**\n"
         "⏳ Der Bot startet gleich neu.",
@@ -1069,11 +1012,16 @@ async def restart(
 
 
 # =========================================================
-# BOT START
+# DISCORD CONNECTION
 # =========================================================
+
+view_registered = False
+
 
 @bot.event
 async def on_ready():
+
+    global view_registered
 
     print("=" * 60)
 
@@ -1094,24 +1042,32 @@ async def on_ready():
         f"⏱️ Uptime: {format_uptime()}"
     )
 
+    print(
+        "🟢 Discord-Verbindung ist aktiv."
+    )
+
     print("=" * 60)
 
-    # Persistent View
-    try:
+    # Persistent View nur einmal registrieren
+    if not view_registered:
 
-        bot.add_view(
-            BewerbungView()
-        )
+        try:
 
-        print(
-            "✅ Bewerbungs-View registriert."
-        )
+            bot.add_view(
+                BewerbungView()
+            )
 
-    except Exception as error:
+            view_registered = True
 
-        print(
-            f"❌ Fehler bei Bewerbungs-View: {error}"
-        )
+            print(
+                "✅ Bewerbungs-View registriert."
+            )
+
+        except Exception as error:
+
+            print(
+                f"❌ Fehler bei Bewerbungs-View: {error}"
+            )
 
     # Slash Commands synchronisieren
     try:
@@ -1135,8 +1091,85 @@ async def on_ready():
         )
 
 
+@bot.event
+async def on_disconnect():
+
+    print(
+        "⚠️ Discord-Verbindung wurde getrennt."
+    )
+
+    print(
+        "🔄 discord.py versucht automatisch, "
+        "die Verbindung wiederherzustellen..."
+    )
+
+
+@bot.event
+async def on_resumed():
+
+    print(
+        "🟢 Discord-Verbindung erfolgreich "
+        "wiederhergestellt."
+    )
+
+
 # =========================================================
-# START
+# WATCHDOG
+# =========================================================
+
+async def discord_watchdog():
+
+    await bot.wait_until_ready()
+
+    print(
+        "🛡️ Discord Watchdog gestartet."
+    )
+
+    while not bot.is_closed():
+
+        try:
+
+            if bot.is_ready():
+
+                print(
+                    f"💚 Discord OK | "
+                    f"Ping: {bot.latency * 1000:.0f} ms"
+                )
+
+            else:
+
+                print(
+                    "⚠️ Discord ist aktuell nicht READY."
+                )
+
+        except Exception as error:
+
+            print(
+                f"❌ Watchdog-Fehler: {error}"
+            )
+
+        await asyncio.sleep(60)
+
+
+# =========================================================
+# STARTUP
+# =========================================================
+
+@bot.event
+async def setup_hook():
+
+    print(
+        "⚙️ Discord Setup wird ausgeführt..."
+    )
+
+    # Watchdog starten
+    asyncio.create_task(
+        discord_watchdog()
+    )
+
+
+# =========================================================
+# MAIN
 # =========================================================
 
 if __name__ == "__main__":
@@ -1162,6 +1195,37 @@ if __name__ == "__main__":
         "🤖 Starte Discord Bot..."
     )
 
-    bot.run(
-        TOKEN
-    )
+    try:
+
+        # discord.py übernimmt automatische
+        # Reconnects bei Verbindungsabbrüchen.
+        bot.run(
+            TOKEN
+        )
+
+    except discord.LoginFailure:
+
+        print(
+            "❌ Discord Login fehlgeschlagen."
+        )
+
+        print(
+            "🔐 Bitte DISCORD_TOKEN prüfen."
+        )
+
+        raise
+
+    except KeyboardInterrupt:
+
+        print(
+            "🛑 Bot wurde manuell beendet."
+        )
+
+    except Exception as error:
+
+        print(
+            f"❌ Kritischer Discord-Fehler: {error}"
+        )
+
+        raise
+```
