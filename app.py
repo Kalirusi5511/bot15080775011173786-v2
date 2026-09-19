@@ -267,7 +267,7 @@ class BewerbungModal(discord.ui.Modal):
         )
 
         # -------------------------------------------------
-        # ERFAHRUNG (bei Auto-Fill mit Vorlage befüllt)
+        # ERFAHRUNG (bei Auto-Fill mit Antwort befüllt)
         # -------------------------------------------------
 
         self.erfahrung = discord.ui.TextInput(
@@ -276,11 +276,14 @@ class BewerbungModal(discord.ui.Modal):
             style=discord.TextStyle.paragraph,
             required=True,
             max_length=1000,
-            default=vorlage["erfahrung"] if auto_fill else ""
+            default=(
+                vorlage["erfahrung"]
+                if auto_fill else ""
+            )
         )
 
         # -------------------------------------------------
-        # MOTIVATION (bei Auto-Fill mit Vorlage befüllt)
+        # MOTIVATION (bei Auto-Fill mit Antwort befüllt)
         # -------------------------------------------------
 
         self.motivation = discord.ui.TextInput(
@@ -289,11 +292,14 @@ class BewerbungModal(discord.ui.Modal):
             style=discord.TextStyle.paragraph,
             required=True,
             max_length=1500,
-            default=vorlage["motivation"] if auto_fill else ""
+            default=(
+                vorlage["motivation"]
+                if auto_fill else ""
+            )
         )
 
         # -------------------------------------------------
-        # ZUSATZFRAGE (bei Auto-Fill mit Vorlage befüllt)
+        # ZUSATZFRAGE (bei Auto-Fill mit Antwort befüllt)
         # -------------------------------------------------
 
         self.zusatz = discord.ui.TextInput(
@@ -302,7 +308,10 @@ class BewerbungModal(discord.ui.Modal):
             style=discord.TextStyle.paragraph,
             required=True,
             max_length=1500,
-            default=vorlage["zusatz"] if auto_fill else ""
+            default=(
+                vorlage["zusatz"]
+                if auto_fill else ""
+            )
         )
 
         # -------------------------------------------------
@@ -457,7 +466,7 @@ class ModusAuswahl(discord.ui.Select):
             discord.SelectOption(
                 label="🚀 Automatisch ausfüllen",
                 value="auto",
-                description="Name und Formularbeschreibung werden vorausgefüllt"
+                description="Name und Antworten werden vorausgefüllt"
             ),
             discord.SelectOption(
                 label="✏️ Manuell ausfüllen",
