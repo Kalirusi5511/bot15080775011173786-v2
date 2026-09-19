@@ -1,4 +1,5 @@
 discord.py==2.7.1
 flask
+gunicorn
 python-dotenv
 requests
