@@ -24,7 +24,16 @@ GUNICORN_PID=$!
 
 echo "🌐 Gunicorn PID: $GUNICORN_PID"
 
+CLEANED_UP=false
+
 cleanup() {
+
+    if [ "$CLEANED_UP" = true ]; then
+        return
+    fi
+
+    CLEANED_UP=true
+
     echo ""
     echo "==================================="
     echo "🛑 Render beendet den Service"
