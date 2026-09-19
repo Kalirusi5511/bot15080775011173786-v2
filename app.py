@@ -161,6 +161,23 @@ FORMULAR_VORLAGEN = {
 
         "zusatz": (
             "Welche Stärken bringst du als Admin mit?"
+        ),
+
+        # Beispielantworten für Auto-Fill
+        "auto_erfahrung": (
+            "Ich bin sehr gut im Coden und habe "
+            "bereits 2 Jahre Erfahrung mit Discord-Servern."
+        ),
+
+        "auto_motivation": (
+            "Ich möchte Admin werden, weil ich den "
+            "Server besser machen will und gerne "
+            "Verantwortung übernehme."
+        ),
+
+        "auto_zusatz": (
+            "Ich bin teamfähig, geduldig und kann "
+            "gut mit Konflikten umgehen."
         )
     },
 
@@ -179,6 +196,21 @@ FORMULAR_VORLAGEN = {
         "zusatz": (
             "Was würdest du bei einem Streit "
             "zwischen zwei Usern machen?"
+        ),
+
+        "auto_erfahrung": (
+            "Ich habe bereits Erfahrung mit Moderation "
+            "und kenne die Regeln gut."
+        ),
+
+        "auto_motivation": (
+            "Ich möchte Moderator werden, um den "
+            "Server sauber und freundlich zu halten."
+        ),
+
+        "auto_zusatz": (
+            "Ich würde beide Seiten anhören und "
+            "dann eine faire Entscheidung treffen."
         )
     },
 
@@ -198,6 +230,21 @@ FORMULAR_VORLAGEN = {
         "zusatz": (
             "Ein User ist unfreundlich. "
             "Wie würdest du reagieren?"
+        ),
+
+        "auto_erfahrung": (
+            "Ich habe Erfahrung im Umgang mit Usern "
+            "und helfe gerne bei Fragen."
+        ),
+
+        "auto_motivation": (
+            "Ich möchte Supporter werden, weil ich "
+            "anderen gerne helfe und geduldig bin."
+        ),
+
+        "auto_zusatz": (
+            "Ich würde ruhig bleiben und versuchen, "
+            "das Problem freundlich zu lösen."
         )
     },
 
@@ -216,6 +263,21 @@ FORMULAR_VORLAGEN = {
 
         "zusatz": (
             "Welche Projekte hast du bereits programmiert?"
+        ),
+
+        "auto_erfahrung": (
+            "Ich kann Python, JavaScript und "
+            "habe bereits Bots programmiert."
+        ),
+
+        "auto_motivation": (
+            "Ich möchte Entwickler werden, um den "
+            "Server mit nützlichen Features zu verbessern."
+        ),
+
+        "auto_zusatz": (
+            "Ich habe bereits Discord-Bots und "
+            "Webseiten programmiert."
         )
     }
 }
@@ -267,7 +329,8 @@ class BewerbungModal(discord.ui.Modal):
         )
 
         # -------------------------------------------------
-        # ERFAHRUNG (bei Auto-Fill mit Antwort befüllt)
+        # ERFAHRUNG
+        # Bei Auto-Fill mit Beispielantwort befüllt
         # -------------------------------------------------
 
         self.erfahrung = discord.ui.TextInput(
@@ -277,13 +340,14 @@ class BewerbungModal(discord.ui.Modal):
             required=True,
             max_length=1000,
             default=(
-                vorlage["erfahrung"]
+                vorlage["auto_erfahrung"]
                 if auto_fill else ""
             )
         )
 
         # -------------------------------------------------
-        # MOTIVATION (bei Auto-Fill mit Antwort befüllt)
+        # MOTIVATION
+        # Bei Auto-Fill mit Beispielantwort befüllt
         # -------------------------------------------------
 
         self.motivation = discord.ui.TextInput(
@@ -293,13 +357,14 @@ class BewerbungModal(discord.ui.Modal):
             required=True,
             max_length=1500,
             default=(
-                vorlage["motivation"]
+                vorlage["auto_motivation"]
                 if auto_fill else ""
             )
         )
 
         # -------------------------------------------------
-        # ZUSATZFRAGE (bei Auto-Fill mit Antwort befüllt)
+        # ZUSATZFRAGE
+        # Bei Auto-Fill mit Beispielantwort befüllt
         # -------------------------------------------------
 
         self.zusatz = discord.ui.TextInput(
@@ -309,7 +374,7 @@ class BewerbungModal(discord.ui.Modal):
             required=True,
             max_length=1500,
             default=(
-                vorlage["zusatz"]
+                vorlage["auto_zusatz"]
                 if auto_fill else ""
             )
         )
