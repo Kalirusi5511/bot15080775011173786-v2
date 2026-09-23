@@ -1,4 +1,6 @@
+# ============================================================
 # Python
+# ============================================================
 __pycache__/
 *.py[cod]
 *$py.class
@@ -8,24 +10,54 @@ env/
 venv/
 .venv/
 ENV/
+build/
+dist/
+*.egg-info/
 
+# ============================================================
 # Discord Bot spezifisch
-formulare.csv
+# ============================================================
+# Zustands-Dateien (werden zur Laufzeit erzeugt)
+bot_state.json
+owners.json
+bot.log
 *.log
+
+# Alte/weitere Log-Dateien
 shutdown_log.json
 crash_log.txt
 error_log.txt
 
+# Formulare (falls lokal gespeichert)
+formulare.csv
+
+# Splash-Bild NICHT ignorieren – wird benötigt!
+# splash.png
+
+# ============================================================
 # Umgebungsvariablen (WICHTIG – Token schützen!)
+# ============================================================
 .env
 .env.local
+.env.*
 config_secret.py
 
+# ============================================================
 # IDE
+# ============================================================
 .vscode/
 .idea/
 *.swp
+*.swo
 
+# ============================================================
 # OS
+# ============================================================
 .DS_Store
 Thumbs.db
+desktop.ini
+
+# ============================================================
+# Render / Deployment
+# ============================================================
+.render/
